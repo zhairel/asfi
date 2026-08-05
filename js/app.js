@@ -137,4 +137,8 @@
     window.addEventListener('resize', () => {
         if (window.innerWidth > 900) setNavigation(false);
     });
+
+    // Enable enhanced states only after the interaction layer initializes.
+    // If this file ever fails to load, content and navigation remain usable.
+    document.documentElement.classList.replace('no-js', 'js');
 })();

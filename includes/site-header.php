@@ -25,18 +25,17 @@ function navClass(string $page, string $activePage): string
     <link rel="icon" type="image/png" href="images/asfi-logo-160.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
-    <script>document.documentElement.classList.replace('no-js', 'js');</script>
-    <link rel="stylesheet" href="css/style.css?v=2.6.1">
-    <script defer src="js/app.js?v=2.6.1"></script>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css?v=3.0.0">
+    <script defer src="js/app.js?v=3.0.0"></script>
 </head>
 <body>
     <a class="skip-link" href="#main">Skip to content</a>
 
     <div class="announcement">
         <div class="container announcement__inner">
-            <p><span class="status-dot" aria-hidden="true"></span> Official ASFI Foundation Website · Davao City</p>
-            <a href="mailto:amissadaqahfamilyincorporated@gmail.com">Talk to the ASFI team <span aria-hidden="true">↗</span></a>
+            <p><span class="status-dot" aria-hidden="true"></span> Faith-led mutual care · Serving Davao City</p>
+            <a href="mailto:amissadaqahfamilyincorporated@gmail.com">Connect with ASFI <span aria-hidden="true">↗</span></a>
         </div>
     </div>
 

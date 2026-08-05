@@ -27,11 +27,20 @@ require __DIR__ . '/includes/site-header.php';
             </div>
 
             <div class="hero__visual reveal reveal--delay">
-                <div class="hero-emblem">
-                    <div class="hero-emblem__rings" aria-hidden="true"></div>
-                    <div class="care-orbit" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-                    <img src="images/asfi-logo-1000.webp" alt="ASFI 2026 official seal" width="520" height="520" fetchpriority="high" decoding="async">
-                    <div class="hero-emblem__note"><span>Mutual care</span><strong>2024</strong><small>Serving Davao communities</small></div>
+                <div class="foundation-visual">
+                    <div class="foundation-visual__top">
+                        <span><i aria-hidden="true"></i> Compassion, organized.</span>
+                        <span>Davao City · PH</span>
+                    </div>
+                    <div class="foundation-visual__seal">
+                        <span class="seal-ring" aria-hidden="true"></span>
+                        <img src="images/asfi-logo-1000.webp" alt="ASFI 2026 official seal" width="420" height="420" fetchpriority="high" decoding="async">
+                        <p>Give with faith.<br>Serve with dignity.</p>
+                    </div>
+                    <div class="foundation-visual__bottom">
+                        <div class="impact-total"><strong>61</strong><span>documented participants supported across two community programs</span></div>
+                        <div class="stewardship-note"><span>Our promise</span><p>Every gift is treated as a sacred trust.</p></div>
+                    </div>
                 </div>
             </div>
         </div>
