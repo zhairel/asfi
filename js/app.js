@@ -1,122 +1,140 @@
-document.addEventListener('DOMContentLoaded', function () {
-    // Mobile Navigation Toggle
-    const navToggle = document.getElementById('navToggle');
-    const navMenu = document.getElementById('navMenu');
+(() => {
+    'use strict';
 
-    if (navToggle && navMenu) {
-        navToggle.addEventListener('click', function () {
-            navMenu.classList.toggle('active');
-            this.classList.toggle('active');
-        });
+    const body = document.body;
+    const header = document.querySelector('.site-header');
+    const nav = document.getElementById('primary-nav');
+    const navToggle = document.querySelector('.nav-toggle');
+    const backToTop = document.querySelector('.back-to-top');
+    let activeModal = null;
+    let previousFocus = null;
+    let scrollFramePending = false;
 
-        navMenu.querySelectorAll('.nav-link, .btn-donate-nav').forEach(link => {
-            link.addEventListener('click', function () {
-                navMenu.classList.remove('active');
-                navToggle.classList.remove('active');
-            });
-        });
-    }
-    // 1. Interactive Amount Selector Buttons
-    const amountBtns = document.querySelectorAll('.amount-btn');
-    const customAmountInput = document.getElementById('customAmount');
+    const setNavigation = (open) => {
+        if (!nav || !navToggle) return;
+        nav.classList.toggle('open', open);
+        navToggle.setAttribute('aria-expanded', String(open));
+        body.classList.toggle('nav-open', open);
+    };
 
-    amountBtns.forEach(btn => {
-        btn.addEventListener('click', function () {
-            amountBtns.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            if (customAmountInput) {
-                customAmountInput.value = this.getAttribute('data-amount');
-            }
-        });
+    navToggle?.addEventListener('click', () => {
+        setNavigation(navToggle.getAttribute('aria-expanded') !== 'true');
     });
 
-    if (customAmountInput) {
-        customAmountInput.addEventListener('input', function () {
-            amountBtns.forEach(b => b.classList.remove('active'));
-        });
-    }
-
-    // 2. Donation Modal Tab Switching
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    const tabContents = document.querySelectorAll('.tab-content');
-
-    tabBtns.forEach(btn => {
-        btn.addEventListener('click', function () {
-            const targetTab = this.getAttribute('data-tab');
-
-            tabBtns.forEach(b => b.classList.remove('active'));
-            tabContents.forEach(c => c.style.display = 'none');
-
-            this.classList.add('active');
-            const activeContent = document.getElementById(targetTab);
-            if (activeContent) {
-                activeContent.style.display = 'block';
-            }
-        });
+    nav?.querySelectorAll('a').forEach((link) => {
+        link.addEventListener('click', () => setNavigation(false));
     });
 
-    // 3. One-Click Copy Account Number to Clipboard
-    const copyBtns = document.querySelectorAll('.btn-copy');
-    copyBtns.forEach(btn => {
-        btn.addEventListener('click', function () {
-            const num = this.getAttribute('data-num');
-            if (navigator.clipboard && num) {
-                navigator.clipboard.writeText(num).then(() => {
-                    showToast(`Copied ${num} to clipboard!`);
-                }).catch(() => {
-                    fallbackCopyText(num);
-                });
-            } else if (num) {
-                fallbackCopyText(num);
-            }
-        });
-    });
-
-    function fallbackCopyText(text) {
-        const temp = document.createElement('textarea');
-        temp.value = text;
-        document.body.appendChild(temp);
-        temp.select();
-        document.execCommand('copy');
-        document.body.removeChild(temp);
-        showToast(`Copied ${text} to clipboard!`);
-    }
-
-    // 4. Toast Notification
-    function showToast(msg) {
-        let toast = document.getElementById('toastMsg');
-        if (!toast) {
-            toast = document.createElement('div');
-            toast.id = 'toastMsg';
-            toast.className = 'toast-msg';
-            document.body.appendChild(toast);
+    document.addEventListener('click', (event) => {
+        if (nav?.classList.contains('open') && !nav.contains(event.target) && !navToggle?.contains(event.target)) {
+            setNavigation(false);
         }
-        toast.innerHTML = `<span>✅</span> ${msg}`;
-        toast.classList.add('show');
-        setTimeout(() => {
-            toast.classList.remove('show');
-        }, 3000);
+    });
+
+    const updateScrollUI = () => {
+        const hasScrolled = window.scrollY > 20;
+        header?.classList.toggle('scrolled', hasScrolled);
+        backToTop?.classList.toggle('visible', window.scrollY > 650);
+    };
+
+    window.addEventListener('scroll', () => {
+        if (scrollFramePending) return;
+        scrollFramePending = true;
+        requestAnimationFrame(() => {
+            updateScrollUI();
+            scrollFramePending = false;
+        });
+    }, { passive: true });
+    updateScrollUI();
+
+    backToTop?.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    const revealItems = document.querySelectorAll('.reveal');
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (!reduceMotion && 'IntersectionObserver' in window) {
+        const revealObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach((entry) => {
+                if (!entry.isIntersecting) return;
+                entry.target.classList.add('is-visible');
+                observer.unobserve(entry.target);
+            });
+        }, { threshold: 0.08, rootMargin: '0px 0px -24px' });
+
+        revealItems.forEach((item) => {
+            if (item.getBoundingClientRect().top < window.innerHeight * 1.08) {
+                item.classList.add('is-visible');
+            } else {
+                revealObserver.observe(item);
+            }
+        });
+    } else {
+        revealItems.forEach((item) => item.classList.add('is-visible'));
     }
 
-    // 5. Form Submissions (Pledge & Volunteer)
-    const pledgeForm = document.getElementById('pledgeForm');
-    if (pledgeForm) {
-        pledgeForm.addEventListener('submit', function (e) {
-            e.preventDefault();
-            const name = document.getElementById('donorName').value;
-            const amount = document.getElementById('customAmount').value;
-            showToast(`JazakAllah Khair ${name}! Your pledge of ₱${amount} has been received.`);
-            this.reset();
-        });
-    }
+    const getFocusable = (container) => Array.from(container.querySelectorAll(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )).filter((element) => !element.hasAttribute('hidden'));
 
-    const volunteerForm = document.getElementById('volunteerForm');
-    if (volunteerForm) {
-        volunteerForm.addEventListener('submit', function (e) {
-            e.preventDefault();
-            const vName = document.getElementById('volName').value;
-            showToast(`Thank you ${vName}! Our ASFI team will contact you soon.`);
-            this.reset();
+    const openModal = (modal) => {
+        if (!modal) return;
+        previousFocus = document.activeElement;
+        activeModal = modal;
+        modal.hidden = false;
+        body.classList.add('modal-open');
+        requestAnimationFrame(() => {
+            const focusable = getFocusable(modal);
+            focusable[0]?.focus();
         });
-    }
-});
+    };
+
+    const closeModal = () => {
+        if (!activeModal) return;
+        activeModal.hidden = true;
+        body.classList.remove('modal-open');
+        activeModal = null;
+        previousFocus?.focus();
+    };
+
+    document.querySelectorAll('[data-open-modal]').forEach((button) => {
+        button.addEventListener('click', () => {
+            setNavigation(false);
+            openModal(document.getElementById(button.dataset.openModal));
+        });
+    });
+
+    document.querySelectorAll('[data-close-modal]').forEach((button) => {
+        button.addEventListener('click', closeModal);
+    });
+
+    document.querySelectorAll('.modal a').forEach((link) => {
+        link.addEventListener('click', () => window.setTimeout(closeModal, 120));
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            if (activeModal) closeModal();
+            setNavigation(false);
+        }
+
+        if (event.key === 'Tab' && activeModal) {
+            const focusable = getFocusable(activeModal);
+            if (!focusable.length) return;
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 900) setNavigation(false);
+    });
+})();
