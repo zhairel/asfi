@@ -1,61 +1,83 @@
-# ASFI Official Website
+# AMIS SADAQAH FAMILY INCORPORATED (ASFI) - Online Membership & Admin Portal
 
-Production-ready website for **AMIS Sadaqah Family Incorporated (ASFI)** in Davao City, Philippines.
+Official online membership registration, document verification, and administrative management portal for **AMIS SADAQAH FAMILY INCORPORATED (ASFI)**.
 
-The official ASFI Profile and Guidelines has been translated into dedicated, readable website pages. Public impact figures and member-benefit amounts are taken from that handbook; the PDF itself is not published on the website and unverified donation account details are intentionally excluded.
+- **SEC Registration No.**: `2026070258874-03`
+- **Headquarters**: Don Julian Rodriguez Sr., Avenue, Ma-A Road, Davao City, Philippines
+- **Official Email**: `amissadaqahfamilyincorporarted@gmail.com`
 
-## Stack
+---
 
-- PHP 8+ for broad shared-host compatibility
-- Modern semantic HTML5
-- Custom responsive CSS (no framework or build step)
-- Dependency-free vanilla JavaScript
-- Apache `.htaccess` for HTTPS, caching, compression, and security headers
+## 🌟 Features
 
-## Local preview
+### 1. Public Membership Registration Wizard (`/register`)
+- **Step 1: Personal Information**: Full legal name, live age calculation, date & place of birth, gender, civil status, citizenship, occupation, religion, spouse details, contact number, residential address, and affiliation.
+  - *Minor Guardian Handling*: When applicant age is under 18, prompts for parent/legal guardian authorization.
+- **Step 2: Designated Beneficiary**: Nominate primary legal beneficiary for mutual assistance benefits, with a one-click *"Same as Applicant Address"* copy button.
+- **Step 3: Document Attachments**:
+  - Recent 2×2 ID photo upload with un-distorted preview.
+  - Valid Government or Student ID upload with preview and ID type selector.
+  - Optional Beneficiary ID / photo.
+  - Authorizing Parent/Guardian ID (required if minor).
+- **Step 4: Official Declarations & Electronic Attestation**:
+  - The exact 3 official statements from the physical ASFI application form.
+  - Data Privacy Act consent.
+  - Voluntary Monthly Sadaqah terms & takaful mutual assistance acknowledgment.
+  - Beneficiary designation certification clause.
+  - Member / Guardian electronic attestation with full printed name and date.
+- **Step 5: Review & Confirmation**:
+  - Full card-by-card summary review before final submission.
+  - Direct jump-to-step buttons for immediate edits.
+- **Post-Submission Confirmation**:
+  - Generates official Reference Number (`ASFI-2026-XXXXX`).
+  - Dynamic QR Code for application verification.
+  - Printable / Save-as-PDF Application Slip with complete member & beneficiary records.
+  - 5-step next steps roadmap (Review $\rightarrow$ Orientation $\rightarrow$ Monthly Sadaqah $\rightarrow$ Registry Activation).
 
-From this directory:
+### 2. Admin Management Dashboard (`/admin`)
+- **Protected Access (`/admin/login`)**: Secure admin login with passcode (default: `asfi2026`).
+- **Live Metrics**: Total registrations, pending verification, approved members, and minor applicants.
+- **Search & Live Filtering**: Search by reference number, name, email, contact, or city; filter by status (`All`, `Pending`, `Approved`, `Rejected`).
+- **Application Review Modal**: Inspect complete applicant profile, beneficiary details, and view high-resolution uploaded ID photos.
+- **1-Click Approvals**: Approve or reject applications directly from the dashboard.
+- **Export to CSV**: Download registry database for SEC compliance or offline records.
+- **Printable Slips**: Print application records with one click.
 
+### 3. Supabase Integration
+- Built-in Supabase client with PostgreSQL schema and RLS policies (`supabase/schema.sql`).
+- Automatic fallback to in-memory registry when Supabase credentials are not yet configured.
+
+---
+
+## 🚀 Setup & Deployment
+
+### Run Locally
 ```bash
-php -S localhost:8080
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Or build and run production server
+npm run build
+npm run start
 ```
+- Open [http://localhost:3000](http://localhost:3000) for the Homepage.
+- Open [http://localhost:3000/register](http://localhost:3000/register) for the Registration Wizard.
+- Open [http://localhost:3000/admin](http://localhost:3000/admin) for the Admin Portal *(Passcode: `asfi2026`)*.
 
-Then open `http://localhost:8080`.
+### Deploy to Vercel
+1. Push this repository to GitHub.
+2. Import the project into your [Vercel Dashboard](https://vercel.com).
+3. Set the following environment variables (optional, for Supabase integration):
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `ADMIN_PASSWORD` (default: `asfi2026`)
+4. Click **Deploy**.
 
-## Deploy to GoDaddy, Hostinger, cPanel, or hPanel
-
-1. Point the domain or subdomain to the hosting account.
-2. Open the host's File Manager and locate the domain document root—usually `public_html/` or a subdomain folder.
-3. Upload the **contents of this project root** (not the enclosing `amis_asfi` folder).
-4. Ensure all root PHP pages, `.htaccess`, `includes/`, `images/`, `css/`, and `js/` are in that document root.
-5. Select PHP 8.1 or newer in the hosting control panel.
-6. Enable the host's free SSL certificate. The included `.htaccess` redirects the live domain to HTTPS.
-7. Visit the live URL and verify every page, email link, mobile menu, and the Sadaqah action dialog.
-
-No Node.js server, database, Composer install, or command-line build is required.
-
-## Before accepting online donations
-
-Replace the verification-only donation dialog only after ASFI has confirmed all of the following:
-
-- Official account holder name
-- GCash/Maya number or bank account
-- Donation receipt workflow
-- Privacy and financial-control process
-
-This prevents placeholder or outdated payment information from appearing on the live site.
-
-## Main files
-
-- `index.php` — home page
-- `about.php` — history, vision, mission, objectives, and values
-- `programs.php` — SMILE, Masjid Cleaners Assistance, and wider programs
-- `membership.php` — eligibility, requirements, rights, duties, and joining process
-- `benefits.php` — complete member-benefit categories and conditions
-- `assistance.php` — benefit application, documents, evaluation, and reminders
-- `includes/` — shared navigation, footer, and dialogs
-- `css/style.css` — full visual system and responsive layout
-- `js/app.js` — navigation, scroll effects, accessible dialogs, and counters
-- `.htaccess` — shared-host server configuration
-
-Production domain: `https://asfi.amis.edu.ph`
+### Supabase Database Setup
+1. Open your Supabase project dashboard.
+2. Navigate to the **SQL Editor**.
+3. Copy and run the contents of [`supabase/schema.sql`](supabase/schema.sql).
