@@ -34,7 +34,27 @@ import {
 } from 'lucide-react';
 import { SkeletonTable } from '@/components/SkeletonLoader';
 
-// Format uppercase names into readable Title Case
+// Format full names strictly in UPPERCASE and omit 'N/A' or missing middle names
+function formatFullName(
+  first: string | null | undefined,
+  middle: string | null | undefined,
+  last: string | null | undefined,
+  suffix?: string | null | undefined
+): string {
+  const f = (first || '').trim().toUpperCase();
+  let m = (middle || '').trim().toUpperCase();
+  if (['N/A', 'NA', 'NONE', 'N.A.', 'N/A.', '-', '.'].includes(m)) {
+    m = '';
+  }
+  const l = (last || '').trim().toUpperCase();
+  let s = (suffix || '').trim().toUpperCase();
+  if (['N/A', 'NA', 'NONE', 'N.A.', 'N/A.', '-', '.'].includes(s)) {
+    s = '';
+  }
+  return [f, m, l, s].filter(Boolean).join(' ');
+}
+
+// Format uppercase names into readable Title Case (for address and notes)
 function toTitleCase(str: string | null | undefined): string {
   if (!str) return '';
   return str
@@ -61,15 +81,29 @@ export default function AdminDashboardPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [copiedRef, setCopiedRef] = useState<string | null>(null);
 
-  // Authentication check
+  // Authentication & URL param check
   useEffect(() => {
     const isAuth = localStorage.getItem('asfi_admin_logged_in') === 'true';
     if (!isAuth) {
       router.push('/admin/login');
       return;
     }
+    const params = new URLSearchParams(window.location.search);
+    const qStatus = params.get('status');
+    if (qStatus && ['all', 'Pending', 'Approved', 'Rejected'].includes(qStatus) && statusFilter !== qStatus) {
+      setStatusFilter(qStatus as any);
+      return;
+    }
     fetchApplications();
   }, [statusFilter]);
+
+  const handleFilterChange = (newStatus: 'all' | 'Pending' | 'Approved' | 'Rejected') => {
+    setStatusFilter(newStatus);
+    if (typeof window !== 'undefined') {
+      const newUrl = newStatus === 'all' ? '/admin/' : `/admin/?status=${encodeURIComponent(newStatus)}`;
+      window.history.replaceState(null, '', newUrl);
+    }
+  };
 
   const fetchApplications = async () => {
     setLoading(true);
@@ -298,9 +332,16 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Executive KPI Metric Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {/* Card 1: Total */}
-          <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs hover:shadow-md transition-all">
+          <div
+            onClick={() => handleFilterChange('all')}
+            className={`rounded-2xl border p-5 shadow-xs hover:shadow-md transition-all cursor-pointer ${
+              statusFilter === 'all'
+                ? 'ring-2 ring-blue-500 bg-blue-50/40 border-blue-300'
+                : 'bg-white border-slate-200/90 hover:border-blue-200'
+            }`}
+          >
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                 Total Submissions
@@ -317,7 +358,14 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Card 2: Pending */}
-          <div className="bg-white rounded-2xl border border-amber-200/90 p-5 shadow-xs hover:shadow-md transition-all bg-gradient-to-br from-amber-50/30 to-white">
+          <div
+            onClick={() => handleFilterChange('Pending')}
+            className={`rounded-2xl border p-5 shadow-xs hover:shadow-md transition-all cursor-pointer ${
+              statusFilter === 'Pending'
+                ? 'ring-2 ring-amber-500 bg-amber-50/50 border-amber-300'
+                : 'bg-white border-amber-200/90 hover:border-amber-300 bg-gradient-to-br from-amber-50/30 to-white'
+            }`}
+          >
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-amber-800 uppercase tracking-wider">
                 Pending Verification
@@ -336,7 +384,14 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Card 3: Approved */}
-          <div className="bg-white rounded-2xl border border-emerald-200/90 p-5 shadow-xs hover:shadow-md transition-all bg-gradient-to-br from-emerald-50/30 to-white">
+          <div
+            onClick={() => handleFilterChange('Approved')}
+            className={`rounded-2xl border p-5 shadow-xs hover:shadow-md transition-all cursor-pointer ${
+              statusFilter === 'Approved'
+                ? 'ring-2 ring-emerald-500 bg-emerald-50/50 border-emerald-300'
+                : 'bg-white border-emerald-200/90 hover:border-emerald-300 bg-gradient-to-br from-emerald-50/30 to-white'
+            }`}
+          >
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider">
                 Approved Members
@@ -354,7 +409,33 @@ export default function AdminDashboardPage() {
             <p className="text-xs text-emerald-700/80 mt-1">Active mutual aid beneficiaries</p>
           </div>
 
-          {/* Card 4: Minors */}
+          {/* Card 4: Rejected Applications */}
+          <div
+            onClick={() => handleFilterChange('Rejected')}
+            className={`rounded-2xl border p-5 shadow-xs hover:shadow-md transition-all cursor-pointer ${
+              statusFilter === 'Rejected'
+                ? 'ring-2 ring-rose-500 bg-rose-50/50 border-rose-300'
+                : 'bg-white border-rose-200/90 hover:border-rose-300 bg-gradient-to-br from-rose-50/30 to-white'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-rose-800 uppercase tracking-wider">
+                Rejected Applications
+              </span>
+              <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 ring-1 ring-rose-200/80 flex items-center justify-center">
+                <XCircle className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="mt-3 flex items-baseline gap-2">
+              <span className="text-3xl font-black text-rose-950">{stats.rejected}</span>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300">
+                Disapproved
+              </span>
+            </div>
+            <p className="text-xs text-rose-700/80 mt-1">Deficient proof or requirements</p>
+          </div>
+
+          {/* Card 5: Minors */}
           <div className="bg-white rounded-2xl border border-purple-200/90 p-5 shadow-xs hover:shadow-md transition-all bg-gradient-to-br from-purple-50/30 to-white">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-purple-800 uppercase tracking-wider">
@@ -380,7 +461,7 @@ export default function AdminDashboardPage() {
             {/* Status Filter Segmented Control */}
             <div className="flex flex-wrap items-center p-1 bg-slate-100/90 rounded-xl border border-slate-200/80">
               <button
-                onClick={() => setStatusFilter('all')}
+                onClick={() => handleFilterChange('all')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
                   statusFilter === 'all'
                     ? 'bg-white text-slate-900 shadow-xs'
@@ -394,7 +475,7 @@ export default function AdminDashboardPage() {
               </button>
 
               <button
-                onClick={() => setStatusFilter('Pending')}
+                onClick={() => handleFilterChange('Pending')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
                   statusFilter === 'Pending'
                     ? 'bg-white text-amber-900 shadow-xs'
@@ -409,7 +490,7 @@ export default function AdminDashboardPage() {
               </button>
 
               <button
-                onClick={() => setStatusFilter('Approved')}
+                onClick={() => handleFilterChange('Approved')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
                   statusFilter === 'Approved'
                     ? 'bg-white text-emerald-900 shadow-xs'
@@ -424,7 +505,7 @@ export default function AdminDashboardPage() {
               </button>
 
               <button
-                onClick={() => setStatusFilter('Rejected')}
+                onClick={() => handleFilterChange('Rejected')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
                   statusFilter === 'Rejected'
                     ? 'bg-white text-rose-900 shadow-xs'
@@ -492,8 +573,8 @@ export default function AdminDashboardPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium">
                   {applications.map((app) => {
-                    const fullName = `${toTitleCase(app.first_name)} ${toTitleCase(app.middle_name)} ${toTitleCase(app.last_name)} ${app.suffix || ''}`.trim();
-                    const beneficiaryName = `${toTitleCase(app.beneficiary_first_name)} ${toTitleCase(app.beneficiary_last_name)}`.trim();
+                    const fullName = formatFullName(app.first_name, app.middle_name, app.last_name, app.suffix);
+                    const beneficiaryName = formatFullName(app.beneficiary_first_name, app.beneficiary_middle_name, app.beneficiary_last_name, app.beneficiary_suffix);
 
                     return (
                       <tr
@@ -501,7 +582,7 @@ export default function AdminDashboardPage() {
                         onClick={() => router.push(`/admin/applications/view/?id=${encodeURIComponent(app.id || app.reference_number)}`)}
                         className="hover:bg-slate-50/80 cursor-pointer transition group"
                       >
-                        {/* Applicant Column with Avatar */}
+                        {/* Applicant Column with Avatar & Reference Code */}
                         <td className="py-3.5 px-4">
                           <div className="flex items-center gap-3">
                             {app.photo_2x2_url ? (
@@ -513,21 +594,29 @@ export default function AdminDashboardPage() {
                                 />
                               </div>
                             ) : (
-                              <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-xs flex items-center justify-center ring-2 ring-emerald-50 flex-shrink-0">
+                              <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-700 font-extrabold text-xs flex items-center justify-center ring-2 ring-slate-200 flex-shrink-0">
                                 {getInitials(app.first_name, app.last_name)}
                               </div>
                             )}
 
                             <div>
-                              <div className="font-bold text-slate-900 group-hover:text-emerald-900 transition flex items-center gap-1.5">
-                                {fullName}
+                              <div className="font-black text-slate-900 group-hover:text-emerald-900 transition flex items-center gap-1.5 flex-wrap">
+                                <span>{fullName}</span>
                                 {app.is_underage && (
                                   <span className="text-[10px] font-extrabold bg-purple-100 text-purple-800 px-1.5 py-0.2 rounded-md">
                                     Minor
                                   </span>
                                 )}
+                                {!app.photo_2x2_url && (
+                                  <span className="text-[9px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200 px-1.5 py-0.5 rounded uppercase tracking-tight">
+                                    Missing Upload Pic
+                                  </span>
+                                )}
                               </div>
-                              <div className="text-xs text-slate-500 font-normal flex items-center gap-2 mt-0.5">
+                              <div className="text-xs text-slate-500 font-normal flex flex-wrap items-center gap-1.5 mt-0.5">
+                                <span className="font-mono text-[11px] font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                                  {app.reference_number}
+                                </span>
                                 <span>{app.contact_number}</span>
                                 {app.email && <span className="text-slate-300">•</span>}
                                 <span className="truncate max-w-[140px]">{app.email}</span>
@@ -541,7 +630,17 @@ export default function AdminDashboardPage() {
                           <div className="font-semibold text-slate-800">
                             {app.age !== null ? `${app.age} yrs` : 'N/A'} • {app.gender}
                           </div>
-                          <span className="text-[11px] text-slate-400 capitalize">{app.civil_status}</span>
+                          <div className="flex items-center gap-1 text-[11px] text-slate-400">
+                            <span className="capitalize">{app.civil_status}</span>
+                            {app.present_address && (
+                              <>
+                                <span>•</span>
+                                <span className="truncate max-w-[120px]" title={app.present_address}>
+                                  {app.present_address.split(',')[0]}
+                                </span>
+                              </>
+                            )}
+                          </div>
                         </td>
 
                         {/* Beneficiary */}
@@ -552,28 +651,35 @@ export default function AdminDashboardPage() {
                           </span>
                         </td>
 
-                        {/* Date Applied */}
-                        <td className="py-3.5 px-4 whitespace-nowrap text-xs text-slate-500">
-                          {app.date_applied}
+                        {/* Date Applied (with created_at fallback) */}
+                        <td className="py-3.5 px-4 whitespace-nowrap text-xs text-slate-500 font-mono">
+                          {app.date_applied || (app.created_at ? app.created_at.slice(0, 10) : 'N/A')}
                         </td>
 
                         {/* Status */}
-                        <td className="py-3.5 px-4 whitespace-nowrap">
+                        <td className="py-3.5 px-4">
                           {app.status === 'Approved' && (
-                            <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
                               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Approved
                             </span>
                           )}
                           {app.status === 'Pending' && (
-                            <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+                            <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 whitespace-nowrap">
                               <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
                               Pending
                             </span>
                           )}
                           {app.status === 'Rejected' && (
-                            <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
-                              <XCircle className="w-3.5 h-3.5 text-rose-600" /> Rejected
-                            </span>
+                            <div className="space-y-1">
+                              <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 whitespace-nowrap">
+                                <XCircle className="w-3.5 h-3.5 text-rose-600" /> Rejected
+                              </span>
+                              {app.admin_notes && (
+                                <p className="text-[11px] text-rose-700/80 max-w-[220px] truncate font-normal" title={app.admin_notes}>
+                                  {app.admin_notes}
+                                </p>
+                              )}
+                            </div>
                           )}
                         </td>
 
@@ -627,8 +733,16 @@ export default function AdminDashboardPage() {
               </table>
 
               {/* Table Footer */}
-              <div className="p-4 bg-slate-50/60 border-t border-slate-200/80 flex items-center justify-between text-xs text-slate-500">
-                <span>Showing {applications.length} recorded application(s)</span>
+              <div className="p-4 bg-slate-50/60 border-t border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-500">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-semibold text-slate-700">Showing {applications.length} of {stats.total} application(s)</span>
+                  <span className="text-slate-300">•</span>
+                  <span>Approved: <strong className="text-emerald-700 font-bold">{stats.approved}</strong></span>
+                  <span className="text-slate-300">•</span>
+                  <span>Rejected: <strong className="text-rose-700 font-bold">{stats.rejected}</strong></span>
+                  <span className="text-slate-300">•</span>
+                  <span>Pending: <strong className="text-amber-700 font-bold">{stats.pending}</strong></span>
+                </div>
                 <span>Click any row to open full member verification page</span>
               </div>
             </div>
